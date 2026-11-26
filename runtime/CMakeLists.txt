@@ -244,6 +244,7 @@ if(WIN32 AND LEONIDA_BUILD_WINDOWS_RUNTIME)
     shims/library_loader.cpp
     shims/process.cpp
     shims/lifecycle.cpp
+    shims/window_surface.cpp
     shims/com_shim.cpp
     shims/silent_audio.cpp
     shims/bcrypt_rng.cpp
@@ -508,6 +509,20 @@ if(WIN32 AND LEONIDA_BUILD_WINDOWS_RUNTIME)
   target_compile_options(lifecycle_test PRIVATE /W4 /permissive- /utf-8)
   target_link_options(lifecycle_test PRIVATE /OPT:NOREF)
   target_link_libraries(lifecycle_test PRIVATE user32)
+
+  # Window-surface pass-through shims: the title's 7-function window set (class registration,
+  # DefWindowProc, ShowWindow, message pump); CreateWindowExA itself is lifecycle.cpp's.
+  add_executable(window_surface_test
+    test/window_surface_test.cpp
+    shims/window_surface.cpp
+    shims/lifecycle.cpp
+    shims/registry.cpp
+  )
+  target_include_directories(window_surface_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/shims)
+  target_compile_definitions(window_surface_test PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+  target_compile_options(window_surface_test PRIVATE /W4 /permissive- /utf-8)
+  target_link_options(window_surface_test PRIVATE /OPT:NOREF)
+  target_link_libraries(window_surface_test PRIVATE user32)
 
   # Console paths (GAME:) and the write overlay: the file shims resolved through the registry, over temporary folders.
   add_executable(file_system_test
@@ -1687,6 +1702,9 @@ if(BUILD_TESTING)
   endif()
   if(WIN32 AND TARGET lifecycle_test)
     add_test(NAME lifecycle COMMAND lifecycle_test)
+  endif()
+  if(WIN32 AND TARGET window_surface_test)
+    add_test(NAME window_surface COMMAND window_surface_test)
   endif()
   if(WIN32 AND TARGET file_system_test)
     add_test(NAME file_system COMMAND file_system_test)
